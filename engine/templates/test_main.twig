@@ -1,0 +1,62 @@
+{% extends 'test_document.twig' %}
+{% block body %}
+  <div class="content">
+
+    <h2>Лента магазина</h2>
+
+    <div class="lent">
+
+      <div class="post-box">
+        <div class="post">
+          <h1>Заголовок первого поста</h1>
+          <div class="text">Более длинный текст основного содежимого первого поста.</div>
+        </div>
+      </div>
+
+      <div class="post-box">
+        <div class="post">
+          <h3>Заголовок второго поста</h3>
+          <img class="" src="/img/fotos/mini/f1.jpg">
+        </div>
+      </div>
+
+      <div class="post-box">
+        <div class="post">
+          <div class="text">Третий пост без заголовка</div>
+          <img src="/img/fotos/big/f2.jpg">
+        </div>
+      </div>
+
+      <div class="post-box">
+        <div class="post">
+          <div class="text">Четвёртый пост без заголовка, с тремя маленькими картинками</div>
+          <div class="imgs">
+            <img src="/img/fotos/ico/f3.jpg">
+            <img src="/img/fotos/ico/f4.jpg">
+            <img src="/img/fotos/ico/f5.jpg">
+            <img src="/img/fotos/ico/f3.jpg">
+            <img src="/img/fotos/ico/f4.jpg">
+            <img src="/img/fotos/ico/f5.jpg">
+          </div>
+        </div>
+      </div>
+
+      <div class="post-box">
+        <div class="post">
+          <img src="/img/fotos/mini/f6.jpg">
+          <div class="text">Пост без заголовка, с текстом после картинки</div>
+        </div>
+      </div>
+
+      <div class="post-box">
+        <div class="post">
+          <div class="text">Пост без заголовка, с текстом до картинки</div>
+          <img src="/img/fotos/mini/f1.jpg">
+          <div class="text">и с текстом после картинки</div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+{% endblock %}

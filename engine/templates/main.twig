@@ -1,0 +1,32 @@
+{% extends 'document.twig' %}
+{% block body %}
+  <div class="body">
+
+    <div class="nav">
+      <div class="_nav active" value="_main_lent">Главная лента</div>
+      <div class="_nav" value="_my_lent">Моя лента</div>
+      <div class="_nav" value="_friend_lent">Лента друзей</div>
+    </div>
+
+    <div class="_lent lent _main_lent active">
+      <div>
+        Content of the Main Lent
+      </div>
+    </div>
+
+    <div class="_lent lent _my_lent">
+      <div>
+        The My Lent content
+      </div>
+    </div>
+
+    <div class="_lent lent _friend_lent">
+      <div>
+        My Friends lent content
+      </div>
+    </div>
+
+    </div>
+
+  <script src="/js/main.js"></script>
+{% endblock %}

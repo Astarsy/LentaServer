@@ -5,6 +5,7 @@ namespace Controllers;
 use Common\Classes\App;
 use Common\Classes\DB;
 use Common\Classes\Logger;
+use Common\Classes\User;
 use Common\Classes\Utils;
 
 class Html extends Base{
@@ -44,8 +45,28 @@ class Html extends Base{
         return $this->_twig->render('main.twig',['this'=>$this]);
     }
 
-    protected function default_page(){
-        $this->title=Utils::now().' Lenta - Default';
+    protected function out(){
+        Logger::logout();
+        header('Location: /html');
+        exit;
+    }
+
+    protected function remotelogin($args){
+        // Перенаправлен с основного хоста с данными для логина,
+        // логинить удалённо по аргументам строки запроса
+        App::$user=Logger::loginByRemote($args);
+        header('Location: /html');
+        exit;
+    }
+
+    protected function login($args){
+        // Перенаправлен из скрипта, для попытки удалённого логирования
+        header('Location: '.App::$params['AUTH_HOST'].'/lenta');
+        exit;
+    }
+
+    protected function default_page($args){
+        $this->title='Lenta';
         $this->start_data=App::getStartData();
         return $this->_twig->render('default.twig',['this'=>$this]);
     }

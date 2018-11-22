@@ -5,6 +5,7 @@ namespace Common\Classes;
 class App{
 
     public static $params=[
+        'AUTH_HOST'=>'http://100tkaney.loc',
         'db'=>[
             'name'=>'u0232960_lenta451888',
             'user'=>'u0232960_lent',
@@ -52,8 +53,8 @@ class App{
     public static $user=null;
 
     public static function getStartData(){
-        $user=App::$user;
-        $mag_start_data=App::$params['mag_start_data'];
+        $user=self::$user;
+        $mag_start_data=self::$params['mag_start_data'];
         $timeout="timeout:".$mag_start_data['timeout'].',';
 
         if(!$user){
@@ -74,6 +75,8 @@ class App{
     },";
             $user_str="
     user: {
+        id: $user->id,
+        et: '$user->enter_token',
         name: '$user->name'
     },";
         }

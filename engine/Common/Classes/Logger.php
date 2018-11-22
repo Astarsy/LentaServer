@@ -26,30 +26,21 @@ class Logger{
     }
 
     public static function loginByRemote($args){
-        // Запросить удалённую аутентификацию по hash(id), enter_token,
+        // Запросить удалённую аутентификацию по id, enter_token,
         // проверить ответ по хэшу enter_token,
-        // проверить, есть ли он в БД, извлеч или создать,
-        // залогинить куками,
-        // сохранить в user
+        // проверить, есть ли он в БД, извлечь или создать,
+        // залогинить куками, вернуть user/null
 
         if(count($args)<2)return null;
         $suid=Utils::clearUInt($args[0]);
         $et=Utils::clearStr($args[1]);
 
-        $url='http://100tkaney.loc/api/lenta/login';
+        $url=App::$params['AUTH_HOST'].'/api/lenta/login';
         $params['hid']=Utils::getHash($suid);
         $params['et']=$et;
 
-        $curl = curl_init();
-        curl_setopt($curl, CURLOPT_URL, $url);
-        curl_setopt($curl, CURLOPT_POST, 1);
-        curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1); // вернуть ответ
-        curl_setopt($curl, CURLOPT_POSTFIELDS,$params);
-        $json_resp=curl_exec($curl);
-        curl_close($curl);
-
+        $json_resp=self::request($url,$params);
         if(null==($res_arr=json_decode($json_resp)))return null;
-
         $het_in=$res_arr->her;
         $het_fact=Utils::getHash($et);
 
@@ -74,6 +65,18 @@ class Logger{
             }
             return self::login($user);
         }
+    }
+
+    protected static function request($url,$params){
+        // Отправить запрос, вернуть ответ
+        $curl = curl_init();
+        curl_setopt($curl, CURLOPT_URL, $url);
+        curl_setopt($curl, CURLOPT_POST, 1);
+        curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1); // вернуть ответ
+        curl_setopt($curl, CURLOPT_POSTFIELDS,$params);
+        $resp=curl_exec($curl);
+        curl_close($curl);
+        return $resp;
     }
 
     public static function login($user){

@@ -4,6 +4,7 @@ namespace Controllers;
 
 use Common\Classes\App;
 use Common\Classes\DB;
+use Common\Classes\Logger;
 use Common\Classes\UserPost;
 use Common\Classes\Utils;
 
@@ -47,7 +48,7 @@ class Api extends Base{
 
     protected function main($args){
         // Отдать сообщения Главной ленты
-        if(!isset($_GET['lastupdate'])) $this->error();
+        if(!isset($_GET['lastupdate'])) $this->error('500 Internal Server Error');
         if(!isset($_GET['curpage']))$cp=0;
         else $cp=Utils::clearUInt($_GET['curpage']);
         $lu=Utils::clearStr($_GET['lastupdate']);
@@ -62,8 +63,8 @@ class Api extends Base{
 
     protected function my($args){
         // Отдать сообщения Личной ленты текущего пользователя
-        if(!$user=App::$user) $this->error();
-        if(!isset($_GET['lastupdate'])) $this->error();
+        if(!$user=App::$user)$this->error('403 Forbidden');
+        if(!isset($_GET['lastupdate']))$this->error('500 Internal Server Error');
         if(!isset($_GET['curpage']))$cp=0;
         else $cp=Utils::clearUInt($_GET['curpage']);
         $lu=Utils::clearStr($_GET['lastupdate']);
@@ -78,8 +79,8 @@ class Api extends Base{
 
     protected function friends($args){
         // Отдать сообщения друзей текущего пользователя
-        if(!$user=App::$user) $this->error();
-        if(!isset($_GET['lastupdate'])) $this->error();
+        if(!$user=App::$user) $this->error('403 Forbidden');
+        if(!isset($_GET['lastupdate'])) $this->error('500 Internal Server Error');
         if(!isset($_GET['curpage']))$cp=0;
         else $cp=Utils::clearUInt($_GET['curpage']);
         $lu=Utils::clearStr($_GET['lastupdate']);

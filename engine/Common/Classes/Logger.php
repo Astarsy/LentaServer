@@ -83,8 +83,8 @@ class Logger{
         // Залогинить, т.е сохранить данные для приложения
         $_SESSION[App::$params['SES_NAME']]=$user->enter_token;
 
-//        $t=time()+60*60*24; // куки на s*m*h
-        $t=time()+60; // DEBUG
+        $t=time()+60*60*24*365; // куки на s*m*h*d
+//        $t=time()+0.1*60; // DEBUG
 
         setcookie(
             App::$params['AUTH_NAME']

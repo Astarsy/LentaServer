@@ -21,16 +21,16 @@ class Html extends Base{
         parent::__construct($args);
     }
 
-    protected function test($args){
-        $this->title='Test';
-        $this->page='TEST';
-        echo'<pre>';
-        if(!App::$user)App::$user=Logger::loginByRemote($args);
-
-        echo'<pre>';
-        var_dump(App::$user);
-        return "Ok";
-    }
+//    protected function test($args){
+//        $this->title='Test';
+//        $this->page='TEST';
+//        echo'<pre>';
+//        if(!App::$user)App::$user=Logger::loginByRemote($args);
+//
+//        echo'<pre>';
+//        var_dump(App::$user);
+//        return "Ok";
+//    }
 
     protected function test_main(){
         $this->title='Test - Main';

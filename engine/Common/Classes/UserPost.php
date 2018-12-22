@@ -34,23 +34,26 @@ class UserPost{
             || count($data->items)===0)return null;
         $data->bgci=Utils::clearUInt($data->bgci);
         if($data->bgci>=count($mag_start_data['colors']))return null;
+        if(isset($data->access) && $data->access)$data->access=Utils::clearStr($data->access,11);
+        else $data->access=null;
         if(isset($data->id))$data->id=Utils::clearUInt($data->id);
         $f_c=0;
         $iof=[];
         $foto_ids=[];
         foreach($data->items as &$item){
             if(isset($item->id))self::$_iids[]=$item->id;
-            if(isset($item->text))$item->text=Utils::clearStr($item->text,$mag_start_data['max_post_item_text_length']);
+            if(isset($item->text)&&$item->text)$item->text=Utils::clearStr($item->text,$mag_start_data['max_post_item_text_length']);
             else $item->text=null;
-            if(isset($item->tag))$item->tag=Utils::clearStr($item->tag,20);
+            if(isset($item->tag)&&$item->tag)$item->tag=Utils::clearStr($item->tag,20);
             else $item->tag=null;
-            if(isset($item->fotos_class))$item->fotos_class=Utils::clearStr($item->fotos_class,20);
+            if(isset($item->fotos_class)&&$item->fotos_class)$item->fotos_class=Utils::clearStr($item->fotos_class,20);
             else $item->fotos_class=null;
-            if(isset($item->fotos_align))$item->fotos_align=Utils::clearStr($item->fotos_align,20);
+            if(isset($item->fotos_align)&&$item->fotos_align)$item->fotos_align=Utils::clearStr($item->fotos_align,20);
             else $item->fotos_align=null;
             if(isset($item->fotos) && is_array($item->fotos)){
                 foreach($item->fotos as &$foto){
-                    $foto=Utils::clearStr($foto, 100);
+                    $foto->id=Utils::clearUInt($foto->id);
+                    $foto->name=Utils::clearStr($foto->name,100);
                 }
                 foreach($item->foto_ids as &$id){
                     $foto_ids[]=Utils::clearUInt($id);
@@ -138,14 +141,15 @@ DELETE FROM post_items WHERE post_id=$pid AND id  NOT IN($existed_iids);");
         if(isset($this->_data->id))$pid=$this->_data->id;
         else $pid='DEFAULT';
         $sql="
-INSERT INTO posts (`id`,`user_id`,`created_at`,`bgci`,`status`)
-  VALUES ($pid,:ui,:now,:bg,'new')
-ON DUPLICATE KEY UPDATE `bgci`=:bg,`updated_at`=NOW(),status=:us";
+INSERT INTO posts (`id`,`user_id`,`created_at`,`bgci`,`status`,`access`)
+  VALUES ($pid,:ui,:now,:bg,'new',:ac)
+ON DUPLICATE KEY UPDATE `bgci`=:bg,`updated_at`=NOW(),status=:us,access=:ac";
         $stmt=$this->_pdo->prepare($sql);
         $stmt->bindValue(':ui',App::$user->id);
         $stmt->bindValue(':us',App::$user->default_post_status);
         $stmt->bindValue(':now',Utils::now());
         $stmt->bindValue(':bg',$this->_data->bgci);
+        $stmt->bindValue(':ac',$this->_data->access);
         $stmt->execute();
 
         if($pid=='DEFAULT'){

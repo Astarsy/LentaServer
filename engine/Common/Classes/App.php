@@ -61,7 +61,9 @@ class App{
             $my_tab='';
             $friends_tab='';
             $user_str='';
+            $subscribes='';
         }else{
+            $subscribes='subscribes:'.json_encode(DB::getUserSubscribeUsers(0,0,0,$user->id)).',';
             $my_tab="
     {
         name: 'Моя',
@@ -70,8 +72,8 @@ class App{
     },";
             $friends_tab="
     {
-        name: 'Друзья',
-        type: 'friends'
+        name: 'Подписки',
+        type: 'subscribeposts'
     },";
             $user_str="
     user: {
@@ -83,7 +85,11 @@ class App{
 
         $tabs=" tabs: [
         {
-            name: 'Главная',
+            name: 'Новые',
+            type: 'news'
+        },
+        {
+            name: 'Анонсы',
             type: 'main'
         },$my_tab
         $friends_tab
@@ -91,6 +97,7 @@ class App{
 
         $start_data_str="
 document.mag_start_data={
+    $subscribes
     $tabs
     $user_str
     $timeout

@@ -11,8 +11,33 @@ class Api extends Base{
 
     const PAGE_POSTS_COUNT=8;
     const MAIN_USER_ID=1;
-    const MAX_TEXT_LENGTH=200;
     const MAX_ITEMS_COUNT=2;
+
+    protected function addcomment($args){
+        // Добавить и вернуть новый комментарий в виде объекта
+        if(!$user=App::$user)$this->error('403 Forbidden');
+        if(!isset($_GET['lastupdate']) || !isset($_GET['pid']) || !isset($_GET['text']))$this->error('500 Internal Server Error');
+        if(!isset($_GET['curpage']))$cp=0;
+        $pid=Utils::clearUInt($_GET['pid']);
+        $text=Utils::clearStr($_GET['text'],App::MAX_TEXT_LENGTH);
+        if(!($comment=DB::addPostComment($pid,$user->id,$text)))$this->error('500 Internal Server Error');
+        else{
+            header('Content-type:application/json');
+            die(json_encode($comment));
+        }
+    }
+
+    protected function getcomments($args){
+        // Вернуть массив комментариев для данного поста
+        if(!isset($_GET['lastupdate']) || !isset($_GET['pid']))$this->error('500 Internal Server Error');
+        if(!isset($_GET['curpage']))$cp=0;
+        else $cp=Utils::clearUInt($_GET['curpage']);
+        $lu=Utils::clearStr($_GET['lastupdate']);
+        $pid=Utils::clearUInt($_GET['pid']);
+        $obj=DB::getPostComments($lu,$cp,self::PAGE_POSTS_COUNT,$pid);
+        header('Content-type:application/json');
+        die(json_encode($obj));
+    }
 
     protected function subscribe($args){
         // Принять uid, подписать п-ля, вернуть п-ля - автора/error 500

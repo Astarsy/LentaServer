@@ -20,6 +20,82 @@ class DB{
         if(App::$params['debug'])self::$_pdo->setAttribute(\PDO::ATTR_ERRMODE,\PDO::ERRMODE_EXCEPTION);
     }
 
+    public static function addPostComment($pid,$aid,$text){
+        // Добавить комментарий, вернуть его-же, как объект
+        $pdo=self::getPDO();
+        $now=Utils::now();
+        try{
+            $pdo->beginTransaction();
+
+            $sql="
+INSERT INTO comments(author_id, post_id, created_at, text) VALUES(:ai,:pi,:ca,:te)
+ON DUPLICATE KEY UPDATE `created_at`=:ca,`text`=:te";
+            $stmt=$pdo->prepare($sql);
+            $stmt->bindValue(':ai',$aid,\PDO::PARAM_INT);
+            $stmt->bindValue(':pi',$pid,\PDO::PARAM_INT);
+            $stmt->bindValue(':ca',$now,\PDO::PARAM_INT);
+            $stmt->bindValue(':te',$text,\PDO::PARAM_STR);
+            $stmt->execute();
+
+            $sql="
+SELECT c.*,u.id as author_id,u.name as author_name,u.avatar as author_avatar FROM comments c
+  LEFT JOIN users u ON u.id=c.author_id
+WHERE author_id=:ai AND post_id=:pi";
+            $stmt=$pdo->prepare($sql);
+            $stmt->bindValue(':ai',$aid,\PDO::PARAM_INT);
+            $stmt->bindValue(':pi',$pid,\PDO::PARAM_INT);
+            $stmt->execute();
+            $obj=$stmt->fetch(\PDO::FETCH_ASSOC);
+            unset($obj->text);
+
+            $pdo->commit();
+            return $obj;
+        }catch(\PDOException $e){
+            $pdo->rollback();
+                        die($e->getMessage());
+            return null;
+        }
+    }
+
+    public static function getPostComments($lu,$cp,$op,$pid){
+        // Вернуть объект новых активных комментаринв для данного поста и флаг возможности добавления
+        $from=(int)$cp*(int)$op;
+        $pdo=self::getPDO();
+        try{
+            $sql="
+SELECT c.*,u.id as author_id,u.name as author_name,u.avatar as author_avatar FROM comments c
+  LEFT JOIN users u ON u.id=c.author_id
+WHERE c.post_id=:pid AND c.created_at>:lu
+ORDER BY c.created_at DESC
+LIMIT $from,$op
+";
+            $stmt=$pdo->prepare($sql);
+            $stmt->bindValue(':pid',$pid,\PDO::PARAM_INT);
+            $stmt->bindValue(':lu',$lu,\PDO::PARAM_STR);
+            $stmt->execute();
+            $items=$stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+            if(!($user=App::$user))$can_add=false;
+            else{
+                $uid=$user->id;
+                $sql="SELECT COUNT(id)<=0 FROM comments WHERE author_id=$uid AND post_id=$pid";
+                $stmt=$pdo->prepare($sql);
+                $stmt->execute();
+                $can_add=$stmt->fetch(\PDO::FETCH_NUM)[0];
+            }
+
+            $obj=new \stdClass();
+            $obj->items=$items;
+            $obj->can_add=(bool)$can_add;
+            $obj->lastupdate=Utils::now();
+
+            return $obj;
+        }catch(\PDOException $e){
+                        die($e->getMessage());
+            return null;
+        }
+    }
+
     public static function getNewsPosts($lu,$cp,$op){
         // Принять время предыдущего обновления, текущую страницу, кол-во на странице
         // вернуть массив всех новых активных постов/null

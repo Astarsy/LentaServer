@@ -4,6 +4,8 @@ namespace Common\Classes;
 
 class App{
 
+    const MAX_TEXT_LENGTH=200;
+
     public static $params=[
         'AUTH_HOST'=>'http://100tkaney.loc',
         'db'=>[
@@ -45,7 +47,7 @@ class App{
         'mag_start_data'=>[
             'timeout'=>30*1000, // обновление клиента, msec
             'max_post_items_count'=>4,
-            'max_post_item_text_length'=> 400,
+            'max_post_item_text_length'=> self::MAX_TEXT_LENGTH,
             'colors'=>['#fff','#fee','#efe','#eef','#ffe','#fef','#eff'],
         ]
     ];

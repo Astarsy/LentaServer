@@ -1,0 +1,9 @@
+{% extends 'document.twig' %}
+{% block body %}
+  <div class="body">
+    <div id="profile-js"></div>
+  </div>
+
+  <script>{{ this.start_data | raw }}</script>
+  <script src="/js/profile.js"></script>
+{% endblock %}

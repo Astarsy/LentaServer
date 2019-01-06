@@ -8,20 +8,21 @@ namespace Common\Classes;
 
 class UserImageFiles{
 
-    protected $_files=[],$_pdo,$_itemOfFile;
+    protected $_files=[],$_pdo,$_itemOfFile,$_type;
     public $fotos=[];
 
-    public function __construct($pdo,$itemOfFile){
+    public function __construct($pdo,$itemOfFile,$type='foto'){
+        $this->_type=$type;
         $this->_pdo=$pdo;
         $this->_itemOfFile=$itemOfFile;
     }
 
     public function save(){
         // Сохранить вложения
-        $params_foto=App::$params['foto'];
-        $max_size=$params_foto['max_file_size'];
-        $max_count=$params_foto['max_count'];
-        $field_name=$params_foto['field_name'];
+        $params=App::$params[$this->_type];
+        $max_size=$params['max_file_size'];
+        $max_count=$params['max_count'];
+        $field_name=$params['field_name'];
 
         $count=count($_FILES[$field_name]['name']);
         if($count>$max_count)$count=$max_count;
@@ -32,17 +33,36 @@ class UserImageFiles{
                 || $files_array['size']>$max_size
                 || "image/jpeg"!==$files_array['type'])continue;
 
-            $file=new FotoFile($files_array,$this->_pdo);
+            $file=new FotoFileProportional($files_array,$this->_pdo,$this->_type);
             $file->saveFiles();
             $this->_files[]=$file;
-            $file->saveToDB();
 
+            $this->saveToDB($file);
+
+            if(!isset($this->_itemOfFile[$i]))$iof=null;
+            else $iof=$this->_itemOfFile[$i];
             $this->fotos[]= [
                 'id'=>$file->id,
                 'name'=>$file->name,
-                'itemIndex'=>$this->_itemOfFile[$i]
+                'itemIndex'=>$iof
             ];
         }
+    }
+
+    public function saveToDB(&$file){
+        // Сохранить в БД, присвоить id
+        // Выполняется в рамках транзакции родителя
+
+        $sql="INSERT INTO fotos (`created_at`,`name`) VALUES(:ca,:na)";
+        $stmt=$this->_pdo->prepare($sql);
+        $stmt->bindValue(':ca',Utils::now());
+        $stmt->bindValue(':na',$file->name);
+        $stmt->execute();
+
+        $stmt=$this->_pdo->prepare("SELECT LAST_INSERT_ID()");
+        $stmt->execute();
+
+        $file->id=$stmt->fetch(\PDO::FETCH_NUM)[0];
     }
 
     public function delete(){

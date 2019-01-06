@@ -151,6 +151,28 @@ WHERE item_id=".$item['id'];
         }
     }
 
+    public static function getUserPost($pid){
+        // Вернуть пост
+
+        $pdo=self::getPDO();
+        try{
+            $sql="
+SELECT p.*,u.name as user_name,u.avatar as user_avatar FROM posts p
+  LEFT JOIN users u ON u.id=p.user_id
+WHERE p.id=:pid
+";
+            $stmt=$pdo->prepare($sql);
+            $stmt->bindValue(':pid',$pid,\PDO::PARAM_INT);
+            $stmt->execute();
+            $posts=$stmt->fetchAll(\PDO::FETCH_ASSOC);
+            $posts=self::addItemsToPosts($pdo,$posts);
+            return $posts[0];
+        }catch(\PDOException $e){
+            die($e->getMessage());
+//            return null;
+        }
+    }
+
     public static function getUserPosts($lu,$cp,$op,$uid=null,$status='active'){
         // Принять время предыдущего обновления, текущую страницу, кол-во на странице
         // вернуть массив всех или новых постов/null

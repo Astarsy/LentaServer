@@ -76,6 +76,11 @@ class UserPost{
         return $user_post;
     }
 
+    public function getPost(){
+        // Вернуть объект поста, пригодный для отправки
+        return DB::getUserPost($this->_data->id);
+    }
+
     public function save(){
         // Сохранить пост, итемы, фото, вернуть ошибку/null
         try{
@@ -96,7 +101,7 @@ class UserPost{
 
         }catch(\PDOException $e){
             $this->_pdo->rollback();
-            if(isset($this->_images))$this->_images->delete();
+//            if(isset($this->_images))$this->_images->delete();
             return $e->getMessage();
         }
 
@@ -142,7 +147,7 @@ DELETE FROM post_items WHERE post_id=$pid AND id  NOT IN($existed_iids);");
         else $pid='DEFAULT';
         $sql="
 INSERT INTO posts (`id`,`user_id`,`created_at`,`bgci`,`status`,`access`)
-  VALUES ($pid,:ui,:now,:bg,'new',:ac)
+  VALUES ($pid,:ui,:now,:bg,:us,:ac)
 ON DUPLICATE KEY UPDATE `bgci`=:bg,`updated_at`=NOW(),status=:us,access=:ac";
         $stmt=$this->_pdo->prepare($sql);
         $stmt->bindValue(':ui',App::$user->id);

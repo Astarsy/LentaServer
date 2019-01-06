@@ -17,6 +17,18 @@ class App{
         'AUTH_NAME'=>'tK0918s',
         // TODO: реализован только режим Удаления - 'kill_mode'=>true
         'kill_mode'=>true,  // удалять или помечать как удалённые посты, итемы и фото
+        'avatar'=>[
+            'types'=>[
+                'ico'=>[
+                    'width'=>40,
+                    'height'=>40,
+                    'images_path'=>'img/avatars/',
+                ]
+            ],
+            'max_file_size'=>6000000,
+            'max_count'=>1,
+            'field_name'=>'userFiles'
+        ],
         'foto'=>[
             'types'=>[
                 'ico'=>[
@@ -81,7 +93,8 @@ class App{
     user: {
         id: $user->id,
         et: '$user->enter_token',
-        name: '$user->name'
+        name: '$user->name',
+        avatar: '$user->avatar'
     },";
         }
 

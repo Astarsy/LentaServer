@@ -21,22 +21,22 @@ class Html extends Base{
         parent::__construct($args);
     }
 
-//    protected function test($args){
-//        $this->title='Test';
-//        $this->page='TEST';
-//        echo'<pre>';
-//        if(!App::$user)App::$user=Logger::loginByRemote($args);
-//
-//        echo'<pre>';
-//        var_dump(App::$user);
-//        return "Ok";
-//    }
+    protected function test($args){
+        $this->title='Lenta';
+        foreach(App::$params['foto']['types'] as $k=>$v);
 
-    protected function test_main(){
-        $this->title='Test - Main';
-        $this->page='TEST MAIN PAGE';
-        $this->foto_width=App::$params['foto']['types']['mini']['width'];
-        return $this->_twig->render('test_main.twig',['this'=>$this]);
+        echo'<pre>';
+        var_dump($v);
+        exit;
+    }
+
+    protected function profile(){
+        if(!$this->user=App::$user)$this->error('403 Forbidden');
+        $this->title='Lenta - Profile';
+        $sd=new \stdClass();
+        $sd->user=$this->user;
+        $this->start_data='document.mag_start_data='.json_encode($sd).';';// User implements JsonSerializable
+        return $this->_twig->render('profile.twig',['this'=>$this]);
     }
 
     protected function main(){

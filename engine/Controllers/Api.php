@@ -13,6 +13,19 @@ class Api extends Base{
     const MAIN_USER_ID=1;
     const MAX_ITEMS_COUNT=2;
 
+    protected function saveprofile($args){
+        // Сохранить профиль
+        if(!$user=App::$user)$this->error('403 Forbidden');
+        if(isset($_POST['name']))$user->name=Utils::clearStr($_POST['name'],20);
+        if(!empty($_FILES))die('saving fotos');
+        if($err=$user->save()){
+            $this->error('500 Internal Server Error');
+        }
+
+        var_dump($user);
+//        var_dump($_FILES);
+    }
+
     protected function addcomment($args){
         // Добавить и вернуть новый комментарий в виде объекта
         if(!$user=App::$user)$this->error('403 Forbidden');
@@ -86,18 +99,20 @@ class Api extends Base{
     }
 
     protected function add($args){
-        //        var_dump($_POST);exit;
-        // Добавить или обновить пост, вернуть id поста/error 500
+        // Добавить или обновить пост, вернуть пост/error 500
         if(!$user=App::$user) $this->error('403 Forbidden');
         if(!isset($_POST['data']))$this->error();
         $data=json_decode($_POST['data']);
         if(null===$post=UserPost::create($data))$this->error();
+
         if($err=$post->save()){
-            header($_SERVER["SERVER_PROTOCOL"] . " 500 Internal Server Error");
-            die($err);  // TODO: debug only
-//            die('Похоже, что-то не получилось... Если эта ситуация повторится, пожалуйста, сообщите нам об этом, мы обязательно поможем!');
+            $this->error('500 Internal Server Error');
+            // TODO: debug
+            //            header($_SERVER["SERVER_PROTOCOL"] . " 500 Internal Server Error");
+            //            die($err);
         }
-        echo $post->_data->id;
+        header('Content-type:application/json');
+        die(json_encode($post->getPost()));
     }
 
     protected function news($args){

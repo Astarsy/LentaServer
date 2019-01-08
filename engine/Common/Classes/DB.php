@@ -179,7 +179,11 @@ WHERE p.id=:pid
 
         if($status)$stsql=" AND p.status='$status'";
         else $stsql='';
-        $from=(int)$cp*(int)$op;
+
+//        $from=(int)$cp*(int)$op;
+        $from=0;
+        $op=$op+$op*$cp;
+
         if(null===$uid)$and='';
         else{
             if(!is_array($uid)) $and='=' . $uid;

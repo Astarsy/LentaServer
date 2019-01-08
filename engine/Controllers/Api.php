@@ -9,7 +9,7 @@ use Common\Classes\Utils;
 
 class Api extends Base{
 
-    const PAGE_POSTS_COUNT=8;
+    const PAGE_POSTS_COUNT=2;
     const MAIN_USER_ID=1;
     const MAX_ITEMS_COUNT=2;
 
@@ -22,7 +22,7 @@ class Api extends Base{
             $this->error('500 Internal Server Error');
         }
 
-        var_dump($user);
+        var_dump($user); // TODO: DEBUG
 //        var_dump($_FILES);
     }
 

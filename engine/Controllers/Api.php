@@ -10,6 +10,7 @@ use Common\Classes\Utils;
 class Api extends Base{
 
     const PAGE_POSTS_COUNT=2;
+    const COMMENTS_COUNT=20;
     const MAIN_USER_ID=1;
     const MAX_ITEMS_COUNT=2;
 
@@ -47,7 +48,7 @@ class Api extends Base{
         else $cp=Utils::clearUInt($_GET['curpage']);
         $lu=Utils::clearStr($_GET['lastupdate']);
         $pid=Utils::clearUInt($_GET['pid']);
-        $obj=DB::getPostComments($lu,$cp,self::PAGE_POSTS_COUNT,$pid);
+        $obj=DB::getPostComments($lu,$cp,self::COMMENTS_COUNT,$pid);
         header('Content-type:application/json');
         die(json_encode($obj));
     }

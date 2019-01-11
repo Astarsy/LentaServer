@@ -59,6 +59,7 @@ WHERE author_id=:ai AND post_id=:pi";
 
     public static function getPostComments($lu,$cp,$op,$pid){
         // Вернуть объект новых активных комментаринв для данного поста и флаг возможности добавления
+        $max_comments=5;
         $from=(int)$cp*(int)$op;
         $pdo=self::getPDO();
         try{
@@ -78,15 +79,16 @@ LIMIT $from,$op
             if(!($user=App::$user))$can_add=false;
             else{
                 $uid=$user->id;
-                $sql="SELECT COUNT(id)<=0 FROM comments WHERE author_id=$uid AND post_id=$pid";
+                $sql="SELECT COUNT(id)<=:mc FROM comments WHERE author_id=$uid AND post_id=$pid";
                 $stmt=$pdo->prepare($sql);
+                $stmt->bindValue(':mc',$max_comments,\PDO::PARAM_INT);
                 $stmt->execute();
-                $can_add=$stmt->fetch(\PDO::FETCH_NUM)[0];
+                $can_add=(bool)$stmt->fetch(\PDO::FETCH_NUM)[0];
             }
 
             $obj=new \stdClass();
             $obj->items=$items;
-            $obj->can_add=(bool)$can_add;
+            $obj->can_add=$can_add;
             $obj->lastupdate=Utils::now();
 
             return $obj;

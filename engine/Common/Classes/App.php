@@ -4,7 +4,7 @@ namespace Common\Classes;
 
 class App{
 
-    const MAX_TEXT_LENGTH=200;
+    const MAX_TEXT_LENGTH=400;
 
     public static $params=[
         'AUTH_HOST'=>'http://100tkaney.loc',
@@ -15,8 +15,8 @@ class App{
         ],
         'SES_NAME'=>'lsn18081',
         'AUTH_NAME'=>'tK0918s',
-        // TODO: реализован только режим Удаления - 'kill_mode'=>true
-        'kill_mode'=>true,  // удалять или помечать как удалённые посты, итемы и фото
+//         TODO: реализован только режим Удаления - 'kill_mode'=>true
+//        'kill_mode'=>true,  // удалять или помечать как удалённые посты, итемы и фото
         'avatar'=>[
             'types'=>[
                 'ico'=>[
@@ -32,8 +32,8 @@ class App{
         'foto'=>[
             'types'=>[
                 'ico'=>[
-                    'width'=>84,
-                    'height'=>84,
+                    'width'=>160,
+                    'height'=>160,
                     'images_path'=>'img/fotos/ico/',
                 ],
                 'mini'=>[
@@ -73,46 +73,58 @@ class App{
 
         if(!$user){
             $my_tab='';
+            $subscribes_tab='';
             $friends_tab='';
             $user_str='';
             $subscribes='';
         }else{
             $subscribes='subscribes:'.json_encode(DB::getUserSubscribeUsers(0,0,0,$user->id)).',';
+            $friends='friends:'.json_encode(DB::getUserFriendUsers(0,0,0,$user->id)).',';
             $my_tab="
     {
         name: 'Моя',
         type: 'my',
         canadd: true
     },";
-            $friends_tab="
+            $subscribes_tab="
     {
         name: 'Подписки',
         type: 'subscribeposts'
     },";
+            $friends_tab="
+    {
+        name: 'Друзья',
+        type: 'friendposts'
+    }";
+
             $user_str="
     user: {
         id: $user->id,
         et: '$user->enter_token',
         name: '$user->name',
+        about: '$user->about',
         avatar: '$user->avatar'
     },";
+
         }
 
         $tabs=" tabs: [
         {
-            name: 'Новые',
+            name: 'Все',
             type: 'news'
         },
         {
             name: 'Анонсы',
             type: 'main'
         },$my_tab
+        $subscribes_tab
         $friends_tab
     ],";
 
         $start_data_str="
 document.mag_start_data={
     $subscribes
+    $friends
     $tabs
     $user_str
     $timeout

@@ -21,12 +21,23 @@ class Html extends Base{
         parent::__construct($args);
     }
 
+//    protected function test($args){
+//        $this->title='Lenta';
+//
+////        foreach(App::$params['foto']['types'] as $k=>$v);
+//        $v=end(App::$params['foto']['types']);
+//
+//
+//        echo'<pre>';
+//        var_dump($v);
+//        exit;
+//    }
+
     protected function test($args){
         $this->title='Lenta';
-        foreach(App::$params['foto']['types'] as $k=>$v);
 
-        echo'<pre>';
-        var_dump($v);
+        echo'<pre>Ok';
+
         exit;
     }
 

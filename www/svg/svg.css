@@ -1,0 +1,9 @@
+#news2 .cls-1{
+    stroke: currentColor;
+}
+#news2 .cls-1{
+    fill: none;
+}
+.active #news2 .cls-1{
+    fill: #f00;
+}

@@ -98,53 +98,86 @@ LIMIT $from,$op
         }
     }
 
-    public static function getNewsPosts($lu,$cp,$op){
+    public static function getNewsPosts($lu,$cp,$op,$uid=null){
         // Принять время предыдущего обновления, текущую страницу, кол-во на странице
         // вернуть массив всех новых активных постов/null
-        $from=(int)$cp*(int)$op;
+
+//        $from=(int)$cp*(int)$op;
+        $from=0;
+        $op=$op*($cp+1);
+
         $pdo=self::getPDO();
         try{
-            $sql="
-SELECT p.*,u.id as user_id,u.name as user_name,u.avatar as user_avatar FROM
-  (SELECT t2.* FROM
-    (SELECT *,MAX(updated_at)as time FROM posts WHERE status='active' AND ISNULL(access)
-      AND ISNULL(deleted_at)
-      AND updated_at>:lu
-        GROUP BY user_id)t1
-  LEFT JOIN posts t2 ON (t2.updated_at=t1.time AND t2.user_id=t1.user_id))p
+            // Вариант с штучным выбором постов
+//            $sql="
+//SELECT p.*,u.id as user_id,u.name as user_name,u.avatar as user_avatar FROM
+//  (SELECT t2.* FROM
+//    (SELECT *,MAX(updated_at)as time FROM posts WHERE status='active' AND ISNULL(access)
+//      AND ISNULL(deleted_at)
+//      AND updated_at>:lu
+//        GROUP BY user_id)t1
+//  LEFT JOIN posts t2 ON (t2.updated_at=t1.time AND t2.user_id=t1.user_id))p
+//  LEFT JOIN users u ON u.id=p.user_id
+//ORDER BY updated_at DESC
+//LIMIT $from,$op
+//";
+            // Вариант с станлартным выбором постов
+//            $sql="
+//SELECT p.*,u.name as user_name,u.avatar as user_avatar FROM posts p
+//  LEFT JOIN users u ON u.id=p.user_id
+//WHERE ISNULL(p.deleted_at) AND (p.updated_at>=:lu OR p.created_at>=:lu)
+//ORDER BY p.updated_at DESC
+//LIMIT $from,$op
+//";
+            if(null===$uid)$union_sql='';
+            else $union_sql="
+UNION
+SELECT p.*,u.name as user_name,u.avatar as user_avatar FROM friends f
+  LEFT JOIN posts p ON p.user_id=f.friend_id
   LEFT JOIN users u ON u.id=p.user_id
-ORDER BY updated_at DESC
-LIMIT $from,$op
-";
+WHERE f.user_id=$uid AND p.access='private' AND (p.updated_at>=:lu OR p.created_at>=:lu)
+ORDER BY updated_at DESC";
+
+            $sql="
+SELECT p.*,u.name as user_name,u.avatar as user_avatar FROM posts p
+  LEFT JOIN users u ON u.id=p.user_id 
+WHERE ISNULL(p.deleted_at) AND p.status='active' AND ISNULL(p.access) AND (p.updated_at>=:lu OR p.created_at>=:lu)";
+            $sql.=$union_sql;
+            $sql.=" LIMIT $from,$op";
+
             $stmt=$pdo->prepare($sql);
             $stmt->bindValue(':lu',$lu,\PDO::PARAM_STR);
             $stmt->execute();
             $posts=$stmt->fetchAll(\PDO::FETCH_ASSOC);
             $posts=self::addItemsToPosts($pdo,$posts);
 
-            $max=30;
-            foreach($posts as &$p){
-                $sql="
-SELECT id,post_id,tag,fotos_align,
-  'ico' as fotos_class,
-  IF(CHAR_LENGTH(text)>$max,CONCAT(SUBSTRING(text,1,$max),'...'),SUBSTRING(text,1,$max)) as text,
-  CHAR_LENGTH(text)
-FROM post_items WHERE post_id=".$p['id'];
-                $stmt=$pdo->prepare($sql);
-                $stmt->execute();
-                $items=$stmt->fetchAll(\PDO::FETCH_ASSOC);
+            // Вариант с сокращёнными итемами постов
+//            $max=30;
+//            foreach($posts as &$p){
+//                $sql="
+//SELECT id,post_id,tag,fotos_align,
+//  'ico' as fotos_class,
+//  IF(CHAR_LENGTH(text)>$max,CONCAT(SUBSTRING(text,1,$max),'...'),SUBSTRING(text,1,$max)) as text,
+//  CHAR_LENGTH(text)
+//FROM post_items WHERE post_id=".$p['id'];
+//                $stmt=$pdo->prepare($sql);
+//                $stmt->execute();
+//                $items=$stmt->fetchAll(\PDO::FETCH_ASSOC);
+//
+//                foreach($items as &$item){
+//                    $sql="
+//SELECT f.id,f.name FROM fotos_of_post_items fi
+//  LEFT JOIN fotos f ON f.id=fi.foto_id
+//WHERE item_id=".$item['id'];
+//                    $stmt=$pdo->prepare($sql);
+//                    $stmt->execute();
+//                    $item['fotos']=$stmt->fetchAll(\PDO::FETCH_ASSOC);
+//                }
+//                $p['items']=$items;
+//            }
 
-                foreach($items as &$item){
-                    $sql="
-SELECT f.id,f.name FROM fotos_of_post_items fi
-  LEFT JOIN fotos f ON f.id=fi.foto_id
-WHERE item_id=".$item['id'];
-                    $stmt=$pdo->prepare($sql);
-                    $stmt->execute();
-                    $item['fotos']=$stmt->fetchAll(\PDO::FETCH_ASSOC);
-                }
-                $p['items']=$items;
-            }
+            // Вариант с стандартными мтемами постов
+            $posts=self::addItemsToPosts($pdo,$posts);
 
             return $posts;
         }catch(\PDOException $e){
@@ -215,6 +248,57 @@ LIMIT $from,$op
         }
     }
 
+    public static function getMyPosts($lu,$cp,$op,$uid){
+        // вернуть массив всех или новых постов Текущего п-ля/null
+        $from=0;
+        $op=$op*($cp+1);
+        $pdo=self::getPDO();
+        try{
+            $sql="
+SELECT p.*,u.name as user_name,u.avatar as user_avatar FROM posts p
+  LEFT JOIN users u ON u.id=p.user_id
+WHERE p.user_id=$uid AND ISNULL(p.deleted_at) AND (p.updated_at>=:lu OR p.created_at>=:lu)
+ORDER BY p.updated_at DESC
+LIMIT $from,$op
+";
+            $stmt=$pdo->prepare($sql);
+            $stmt->bindValue(':lu',$lu,\PDO::PARAM_STR);
+            $stmt->execute();
+            $posts=$stmt->fetchAll(\PDO::FETCH_ASSOC);
+            $posts=self::addItemsToPosts($pdo,$posts);
+            return $posts;
+        }catch(\PDOException $e){
+//            die($e->getMessage());
+            return null;
+        }
+    }
+
+    public static function getFriendPosts($lu,$cp,$op,$uid){
+        // вернуть массив постов Друзей Текущего п-ля/null
+        $from=0;
+        $op=$op*($cp+1);
+        $pdo=self::getPDO();
+        try{
+            $sql="
+SELECT p.*,u.name as user_name,u.avatar as user_avatar FROM friends f
+  LEFT JOIN posts p ON p.user_id=f.friend_id
+  LEFT JOIN users u ON u.id=f.friend_id
+WHERE f.user_id=$uid AND ISNULL(p.deleted_at) AND (p.updated_at>=:lu OR p.created_at>=:lu)
+ORDER BY p.updated_at DESC
+LIMIT $from,$op
+";
+            $stmt=$pdo->prepare($sql);
+            $stmt->bindValue(':lu',$lu,\PDO::PARAM_STR);
+            $stmt->execute();
+            $posts=$stmt->fetchAll(\PDO::FETCH_ASSOC);
+            $posts=self::addItemsToPosts($pdo,$posts);
+            return $posts;
+        }catch(\PDOException $e){
+//            die($e->getMessage());
+            return null;
+        }
+    }
+
     protected static function addItemsToPosts($pdo,$posts){
         // Добавить к постам итемы и фото, вернуть массив полстов/null
         foreach($posts as &$p){
@@ -241,7 +325,10 @@ WHERE item_id=".$item['id'];
         // Принять время предыдущего обновления, текущую страницу, кол-во на странице
         // вернуть массив всех или новых постов Конкретного пользователя/null
 
-        $from=(int)$cp*(int)$op;
+//        $from=(int)$cp*(int)$op;
+        $from=0;
+        $op=$op*($cp+1);
+
         $pdo=self::getPDO();
         try{
             $sql="
@@ -290,7 +377,7 @@ WHERE item_id=".$item['id'];
         $pdo=self::getPDO();
         $pdo->beginTransaction();
         try{
-            $sql="INSERT INTO subscribes(user_id, subscribe_at_id, created_at, last_view_at) VALUES($uid,$author_id,NOW(),NOW())";
+            $sql="INSERT INTO subscribes(user_id, subscribe_at_id, created_at) VALUES($uid,$author_id,NOW())";
             $stmt=$pdo->prepare($sql);
             $stmt->execute();
 
@@ -331,8 +418,31 @@ ORDER BY s.created_at
             $posts=$stmt->fetchAll(\PDO::FETCH_ASSOC);
             return $posts;
         }catch(\PDOException $e){
-            die($e->getMessage());
-            //            return null;
+//            die($e->getMessage());
+                        return null;
+        }
+    }
+
+    public static function getUserFriendUsers($lu,$cp,$op,$uid){
+        // вернуть массив друзей/null
+
+        $pdo=self::getPDO();
+        try{
+            $sql="
+SELECT u.id,u.name,u.avatar
+  ,(SELECT COUNT(p.id)FROM posts p WHERE p.user_id=f.friend_id)as post_count
+    FROM friends f
+  LEFT JOIN users u ON u.id=f.friend_id
+WHERE f.user_id=$uid
+ORDER BY f.created_at
+";
+            $stmt=$pdo->prepare($sql);
+            $stmt->execute();
+            $posts=$stmt->fetchAll(\PDO::FETCH_ASSOC);
+            return $posts;
+        }catch(\PDOException $e){
+//            die($e->getMessage());
+                        return null;
         }
     }
 
@@ -349,28 +459,42 @@ ORDER BY s.created_at
         return null;
     }
 
-    public static function getUserSubscribePosts($lu,$cp,$op,$uid){
-        // Принять время предыдущего обновления, текущую страницу, кол-во на странице
-        // вернуть массив всех или новых постов друзей/null
+    public static function unfriendUserFrom($uid,$suid){
+        // Удалить из друзей, вернуть ошибку/null
+        $pdo=self::getPDO();
+        try{
+            $sql="DELETE FROM friends WHERE user_id=$uid AND friend_id=$suid";
+            $stmt=$pdo->prepare($sql);
+            $stmt->execute();
+        }catch(\PDOException $e){
+            return $e->getMessage();
+        }
+        return null;
+    }
 
+    public static function getUserSubscribePosts($lu,$cp,$op,$uid){
+        // вернуть массив посты по Подписке/null
+        $from=0;
+        $op=$op*($cp+1);
         $pdo=self::getPDO();
         try{
             $sql="
-SELECT p.*,u.name as user_name,u.avatar as user_avatar FROM posts p
-  LEFT JOIN subscribes s ON s.subscribe_at_id=p.user_id 
-  LEFT JOIN users u ON u.id=p.user_id 
-    AND IF(ISNULL(p.access),TRUE,s.access=p.access) 
-    AND ISNULL(p.deleted_at) AND p.status='active'
-WHERE s.user_id=$uid;
+SELECT p.*,u.name as user_name,u.avatar as user_avatar FROM subscribes s
+  LEFT JOIN posts p ON p.user_id=s.subscribe_at_id
+  LEFT JOIN users u ON u.id=s.subscribe_at_id
+WHERE s.user_id=$uid AND ISNULL(p.deleted_at) AND (p.updated_at>=:lu OR p.created_at>=:lu)
+ORDER BY p.updated_at DESC
+LIMIT $from,$op
 ";
             $stmt=$pdo->prepare($sql);
+            $stmt->bindValue(':lu',$lu,\PDO::PARAM_STR);
             $stmt->execute();
             $posts=$stmt->fetchAll(\PDO::FETCH_ASSOC);
             $posts=self::addItemsToPosts($pdo,$posts);
             return $posts;
         }catch(\PDOException $e){
-            die($e->getMessage());
-//            return null;
+            //            die($e->getMessage());
+            return null;
         }
     }
 

@@ -9,7 +9,7 @@ use Common\Classes\Utils;
 
 class Api extends Base{
 
-    const PAGE_POSTS_COUNT=2;
+    const PAGE_POSTS_COUNT=5;
     const COMMENTS_COUNT=20;
     const MAIN_USER_ID=1;
     const MAX_ITEMS_COUNT=2;
@@ -18,12 +18,12 @@ class Api extends Base{
         // Сохранить профиль
         if(!$user=App::$user)$this->error('403 Forbidden');
         if(isset($_POST['name']))$user->name=Utils::clearStr($_POST['name'],20);
+        if(isset($_POST['about']))$user->about=Utils::clearStr($_POST['about'],200);
         if(!empty($_FILES))die('saving fotos');
         if($err=$user->save()){
             $this->error('500 Internal Server Error');
         }
-
-        var_dump($user); // TODO: DEBUG
+//        var_dump($user); // TODO: DEBUG
 //        var_dump($_FILES);
     }
 
@@ -60,7 +60,7 @@ class Api extends Base{
         $aid=Utils::clearUInt($_POST['uid']);
         if(!($author=DB::subscribeUserTo($user->id,$aid))){
             $this->error('500 Internal Server Error');
-            // TODO: debug
+
 //            header($_SERVER["SERVER_PROTOCOL"] . " 500 Internal Server Error");
 //            die($err);
         }
@@ -82,6 +82,20 @@ class Api extends Base{
         die("Ok");
     }
 
+    protected function unfriend($args){
+        if(!$user=App::$user)$this->error('403 Forbidden');
+        if(!isset($_POST['id']))$this->error('500 Internal Server Error');
+        $suid=Utils::clearUInt($_POST['id']);
+        $err=DB::unfriendUserFrom($user->id,$suid);
+        if($err){
+//            $this->error('500 Internal Server Error');
+            // TODO: debug
+            header($_SERVER["SERVER_PROTOCOL"] . " 500 Internal Server Error");
+            die($err);
+        }
+        die("Ok");
+    }
+
     protected function del($args){
 //        var_dump($_POST);exit;
         // Удалить пост
@@ -92,7 +106,7 @@ class Api extends Base{
         $err=UserPost::delete($pid);
         if($err){
             $this->error('500 Internal Server Error');
-            // TODO: debug
+
 //            header($_SERVER["SERVER_PROTOCOL"] . " 500 Internal Server Error");
 //            die($err);
         }
@@ -118,14 +132,15 @@ class Api extends Base{
 
     protected function news($args){
         // Отдать Новые открытые сообщения всех п-лей
-        // в сокращённом виде
         if(!isset($_GET['lastupdate']))$this->error('500 Internal Server Error');
         if(!isset($_GET['curpage']))$cp=0;
         else $cp=Utils::clearUInt($_GET['curpage']);
         $lu=Utils::clearStr($_GET['lastupdate']);
-        if(null===($posts=DB::getNewsPosts($lu,$cp,self::PAGE_POSTS_COUNT)))$this->error('500 Internal Server Error');
-
-        if(count($posts)<1)die('Ok');
+        $pc=Utils::clearUInt($_GET['postcount']);
+        if(App::$user)$uid=App::$user->id;
+        else $uid=null;
+        if(null===($posts=DB::getNewsPosts($lu,$cp,self::PAGE_POSTS_COUNT,$uid)))$this->error('500 Internal Server Error');
+        if(count($posts)===$pc)die('Ok');
         header('Content-type:application/json');
         $obj=new \stdClass();
         $obj->lastupdate=Utils::now();
@@ -151,12 +166,29 @@ class Api extends Base{
 
     protected function my($args){
         // Отдать сообщения Личной ленты текущего пользователя
-        if(!$user=App::$user)$this->error('403 Forbidden');
+        if(!App::$user)$this->error('403 Forbidden');
         if(!isset($_GET['lastupdate']))$this->error('500 Internal Server Error');
         if(!isset($_GET['curpage']))$cp=0;
         else $cp=Utils::clearUInt($_GET['curpage']);
         $lu=Utils::clearStr($_GET['lastupdate']);
-        if(null===($posts=DB::getUserPosts($lu,$cp,self::PAGE_POSTS_COUNT,$user->id,null)))$this->error('500 Internal Server Error');
+        if(null===($posts=DB::getMyPosts($lu,$cp,self::PAGE_POSTS_COUNT,App::$user->id)))$this->error('500 Internal Server Error');
+
+        if(count($posts)<1)die('Ok');
+        header('Content-type:application/json');
+        $obj=new \stdClass();
+        $obj->lastupdate=Utils::now();
+        $obj->posts=$posts;
+        die(json_encode($obj));
+    }
+
+    protected function friendposts($args){
+        // Отдать сообщения Друзей текущего пользователя
+        if(!App::$user)$this->error('403 Forbidden');
+        if(!isset($_GET['lastupdate']))$this->error('500 Internal Server Error');
+        if(!isset($_GET['curpage']))$cp=0;
+        else $cp=Utils::clearUInt($_GET['curpage']);
+        $lu=Utils::clearStr($_GET['lastupdate']);
+        if(null===($posts=DB::getFriendPosts($lu,$cp,self::PAGE_POSTS_COUNT,App::$user->id)))$this->error('500 Internal Server Error');
 
         if(count($posts)<1)die('Ok');
         header('Content-type:application/json');
@@ -185,14 +217,14 @@ class Api extends Base{
 
     protected function subscribeposts($args){
         // Отдать сообщения по подписке текущего пользователя
-        if(!$user=App::$user) $this->error('403 Forbidden');
-        if(!isset($_GET['lastupdate'])) $this->error('500 Internal Server Error');
+        if(!App::$user)$this->error('403 Forbidden');
+        if(!isset($_GET['lastupdate']))$this->error('500 Internal Server Error');
         if(!isset($_GET['curpage']))$cp=0;
         else $cp=Utils::clearUInt($_GET['curpage']);
         $lu=Utils::clearStr($_GET['lastupdate']);
-        if(null===($posts=DB::getUserSubscribePosts($lu,$cp,self::PAGE_POSTS_COUNT,$user->id)))$this->error('500 Internal Server Error');
+        if(null===($posts=DB::getUserSubscribePosts($lu,$cp,self::PAGE_POSTS_COUNT,App::$user->id)))$this->error('500 Internal Server Error');
 
-        if(count($posts)<1)die("Ok");
+        if(count($posts)<1)die('Ok');
         header('Content-type:application/json');
         $obj=new \stdClass();
         $obj->lastupdate=Utils::now();
@@ -208,6 +240,23 @@ class Api extends Base{
         else $cp=Utils::clearUInt($_GET['curpage']);
         $lu=Utils::clearStr($_GET['lastupdate']);
         if(null===($posts=DB::getUserSubscribeUsers($lu,$cp,self::PAGE_POSTS_COUNT,$user->id)))$this->error('500 Internal Server Error');
+
+        if(count($posts)<1)die("Ok");
+        header('Content-type:application/json');
+        $obj=new \stdClass();
+        $obj->lastupdate=Utils::now();
+        $obj->posts=$posts;
+        die(json_encode($obj));
+    }
+
+    protected function friendusers($args){
+        // Отдать список Друзей текущего пользователя
+        if(!$user=App::$user) $this->error('403 Forbidden');
+        if(!isset($_GET['lastupdate'])) $this->error('500 Internal Server Error');
+        if(!isset($_GET['curpage']))$cp=0;
+        else $cp=Utils::clearUInt($_GET['curpage']);
+        $lu=Utils::clearStr($_GET['lastupdate']);
+        if(null===($posts=DB::getUserFriendUsers($lu,$cp,self::PAGE_POSTS_COUNT,$user->id)))$this->error('500 Internal Server Error');
 
         if(count($posts)<1)die("Ok");
         header('Content-type:application/json');

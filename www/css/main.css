@@ -8,9 +8,9 @@
     font-weight: bold;
 }
 
-body{
+body,
+body *{
     font-family: 'Segoe UI', Arial, Helvetica, sans-serif;
-    margin: 8px 0;
 }
 
 .body{

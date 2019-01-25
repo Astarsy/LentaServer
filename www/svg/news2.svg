@@ -1,0 +1,17 @@
+<?xml-stylesheet type="text/css" href="/svg/svg.css"?>
+<svg  class="svg-ico" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 51 51">
+    <g id="news2">
+        <path class="cls-1" d="M38.73,7.83c4.52,0,6,1.82,6,4.95V45.55c0,3.14-1.48,5-6,5H6.5c-4.52,0-6-1.81-6-5V12.78C.5,9.65,2,7.83,6.5,7.83Z"/>
+        <rect class="cls-1" x="3.71" y="32.5" width="14.74" height="12"/>
+        <line class="cls-2" x1="21.97" y1="32.5" x2="42.49" y2="32.5"/>
+        <line class="cls-2" x1="21.97" y1="44.5" x2="42.49" y2="44.5"/>
+        <line class="cls-2" x1="21.97" y1="38.5" x2="42.49" y2="38.5"/>
+        <rect class="cls-1" x="3.71" y="13.17" width="14.74" height="12"/>
+        <line class="cls-2" x1="21.97" y1="13.17" x2="42.49" y2="13.17"/>
+        <line class="cls-2" x1="21.97" y1="25.17" x2="42.49" y2="25.17"/>
+        <line class="cls-2" x1="21.97" y1="19.17" x2="42.49" y2="19.17"/>
+        <ellipse class="cls-1" cx="39.6" cy="11.83" rx="10.9" ry="11.33"/>
+        <ellipse class="cls-3" cx="39.46" cy="18.31" rx="1.89" ry="1.48"/>
+        <polygon class="cls-3" points="38.38 14.5 37.94 3.17 40.98 3.17 40.53 14.5 38.38 14.5"/>
+    </g>
+</svg>

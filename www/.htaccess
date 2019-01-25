@@ -3,3 +3,10 @@ RewriteEngine on
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule . index.php [L]
+
+AddType image/svg+xml svg svgz
+<IfModule mod_deflate.c>
+  <IfModule mod_filter.c>
+      AddOutputFilterByType DEFLATE "image/svg+xml"
+  </IfModule>
+</IfModule>

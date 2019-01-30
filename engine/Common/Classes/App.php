@@ -15,8 +15,6 @@ class App{
         ],
         'SES_NAME'=>'lsn18081',
         'AUTH_NAME'=>'tK0918s',
-//         TODO: реализован только режим Удаления - 'kill_mode'=>true
-//        'kill_mode'=>true,  // удалять или помечать как удалённые посты, итемы и фото
         'avatar'=>[
             'types'=>[
                 'ico'=>[
@@ -56,6 +54,33 @@ class App{
             'max_count'=>16,
             'field_name'=>'userFiles'
         ],
+        'msgfoto'=>[
+            'types'=>[
+                'ico'=>[
+                    'width'=>160,
+                    'height'=>160,
+                    'images_path'=>'img/msgfotos/ico/',
+                ],
+                'mini'=>[
+                    'width'=>375,
+                    'height'=>375,
+                    'images_path'=>'img/msgfotos/mini/'
+                ],
+                'big'=>[
+                    'width'=>667,
+                    'height'=>667,
+                    'images_path'=>'img/msgfotos/big/'
+                ],
+                'hi'=>[
+                    'width'=>1920,
+                    'height'=>1080,
+                    'images_path'=>'img/msgfotos/hi/'
+                ]
+            ],
+            'max_file_size'=>20000000,
+            'max_count'=>16,
+            'field_name'=>'userFiles'
+        ],
         'mag_start_data'=>[
             'timeout'=>30*1000, // обновление клиента, msec
             'max_post_items_count'=>4,
@@ -75,8 +100,10 @@ class App{
             $my_tab='';
             $subscribes_tab='';
             $friends_tab='';
+            $messages_tab='';
             $user_str='';
             $subscribes='';
+            $friends='';
         }else{
             $subscribes='subscribes:'.json_encode(DB::getUserSubscribeUsers(0,0,0,$user->id)).',';
             $friends='friends:'.json_encode(DB::getUserFriendUsers(0,0,0,$user->id)).',';
@@ -84,18 +111,28 @@ class App{
     {
         name: 'Моя',
         type: 'my',
-        canadd: true
+        canadd: true,
+        comp: 'mainlent'
     },";
             $subscribes_tab="
     {
         name: 'Подписки',
-        type: 'subscribeposts'
+        type: 'subscribeposts',
+        comp: 'mainlent'
     },";
             $friends_tab="
     {
         name: 'Друзья',
-        type: 'friendposts'
-    }";
+        type: 'friendposts',
+        comp: 'mainlent'
+    },";
+            $messages_tab="
+    {
+        name: 'Сообщения',
+        type: 'messages',
+        canadd: true,
+        comp: 'messageslent'
+    },";
 
             $user_str="
     user: {
@@ -111,14 +148,17 @@ class App{
         $tabs=" tabs: [
         {
             name: 'Все',
-            type: 'news'
+            type: 'news',
+            comp: 'mainlent'
         },
         {
             name: 'Анонсы',
-            type: 'main'
+            type: 'main',
+            comp: 'mainlent'
         },$my_tab
         $subscribes_tab
         $friends_tab
+        $messages_tab
     ],";
 
         $start_data_str="

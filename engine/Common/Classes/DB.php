@@ -93,7 +93,7 @@ LIMIT $from,$op
 
             return $obj;
         }catch(\PDOException $e){
-                        die($e->getMessage());
+//                        die($e->getMessage());
             return null;
         }
     }
@@ -203,8 +203,47 @@ WHERE p.id=:pid
             $posts=self::addItemsToPosts($pdo,$posts);
             return $posts[0];
         }catch(\PDOException $e){
-            die($e->getMessage());
-//            return null;
+//            die($e->getMessage());
+            return null;
+        }
+    }
+
+    public static function getUserMessage($pid){
+        // Вернуть пост
+
+        $pdo=self::getPDO();
+        try{
+            $sql="
+SELECT p.*,u.name as user_name,u.avatar as user_avatar FROM messages p
+  LEFT JOIN users u ON u.id=p.user_id
+WHERE p.id=:pid
+";
+            $stmt=$pdo->prepare($sql);
+            $stmt->bindValue(':pid',$pid,\PDO::PARAM_INT);
+            $stmt->execute();
+            $posts=$stmt->fetchAll(\PDO::FETCH_ASSOC);
+            $posts=self::addItemsToMessage($pdo,$posts);
+            return $posts[0];
+        }catch(\PDOException $e){
+//            die($e->getMessage());
+            return null;
+        }
+    }
+
+    public static function getToUserIdByMsgId($mid){
+        // Вернуть id/null
+
+        $pdo=self::getPDO();
+        try{
+            $sql="SELECT user_id FROM  messages WHERE id=:mid";
+            $stmt=$pdo->prepare($sql);
+            $stmt->bindValue(':mid',$mid,\PDO::PARAM_INT);
+            $stmt->execute();
+            $uid=$stmt->fetch(\PDO::FETCH_NUM)[0];
+            return $uid;
+        }catch(\PDOException $e){
+//            die($e->getMessage());
+            return null;
         }
     }
 
@@ -297,6 +336,60 @@ LIMIT $from,$op
 //            die($e->getMessage());
             return null;
         }
+    }
+
+    public static function getMessages($lu,$cp,$op,$uid){
+        // вернуть массив личные сообщения текущего пользователя/null
+        // формат должен соответствовать формату Tab, т.е как посты
+        $from=0;
+        $op=$op*($cp+1);
+        $pdo=self::getPDO();
+        try{
+            $sql="
+SELECT p.*,u.name as user_name,u.avatar as user_avatar,tu.name as to_user_name,tu.avatar as to_user_avatar FROM messages p
+  LEFT JOIN users u ON u.id=p.user_id
+  LEFT JOIN users tu ON tu.id=p.to_user_id
+WHERE p.to_user_id=$uid AND ISNULL(p.deleted_at) AND (p.updated_at>=:lu OR p.created_at>=:lu)
+UNION 
+SELECT p.*,u.name as user_name,u.avatar as user_avatar,tu.name as to_user_name,tu.avatar as to_user_avatar FROM messages p
+  LEFT JOIN users u ON u.id=p.user_id
+  LEFT JOIN users tu ON tu.id=p.to_user_id
+WHERE p.user_id=$uid AND ISNULL(p.deleted_at) AND (p.updated_at>=:lu OR p.created_at>=:lu)
+ORDER BY updated_at DESC
+LIMIT $from,$op
+";
+            $stmt=$pdo->prepare($sql);
+            $stmt->bindValue(':lu',$lu,\PDO::PARAM_STR);
+            $stmt->execute();
+            $posts=$stmt->fetchAll(\PDO::FETCH_ASSOC);
+            $posts=self::addItemsToMessage($pdo,$posts);
+            return $posts;
+        }catch(\PDOException $e){
+//            die($e->getMessage());
+            return null;
+        }
+    }
+
+    protected static function addItemsToMessage($pdo,$posts){
+        // Добавить к постам итемы и фото, вернуть массив полстов/null
+        foreach($posts as &$p){
+            $sql="SELECT * FROM message_items WHERE post_id=".$p['id'];
+            $stmt=$pdo->prepare($sql);
+            $stmt->execute();
+            $items=$stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+            foreach($items as &$item){
+                $sql="
+SELECT f.id,f.name FROM fotos_of_message_items fi
+  LEFT JOIN msgfotos f ON f.id=fi.foto_id
+WHERE item_id=".$item['id'];
+                $stmt=$pdo->prepare($sql);
+                $stmt->execute();
+                $item['fotos']=$stmt->fetchAll(\PDO::FETCH_ASSOC);
+            }
+            $p['items']=$items;
+        }
+        return $posts;
     }
 
     protected static function addItemsToPosts($pdo,$posts){

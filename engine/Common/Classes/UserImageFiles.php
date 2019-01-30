@@ -53,7 +53,8 @@ class UserImageFiles{
         // Сохранить в БД, присвоить id
         // Выполняется в рамках транзакции родителя
 
-        $sql="INSERT INTO fotos (`created_at`,`name`) VALUES(:ca,:na)";
+        $tn=$this->_type.'s';
+        $sql="INSERT INTO $tn (`created_at`,`name`) VALUES(:ca,:na)";
         $stmt=$this->_pdo->prepare($sql);
         $stmt->bindValue(':ca',Utils::now());
         $stmt->bindValue(':na',$file->name);

@@ -4,6 +4,7 @@ namespace Controllers;
 
 use Common\Classes\App;
 use Common\Classes\DB;
+use Common\Classes\UserMessage;
 use Common\Classes\UserPost;
 use Common\Classes\Utils;
 
@@ -118,6 +119,10 @@ class Api extends Base{
         if(!$user=App::$user) $this->error('403 Forbidden');
         if(!isset($_POST['data']))$this->error();
         $data=json_decode($_POST['data']);
+
+//        var_dump($data);
+//        exit;
+
         if(null===$post=UserPost::create($data))$this->error();
 
         if($err=$post->save()){
@@ -196,6 +201,43 @@ class Api extends Base{
         $obj->lastupdate=Utils::now();
         $obj->posts=$posts;
         die(json_encode($obj));
+    }
+
+    protected function messages($args){
+        // Отдать личные сообщения текущего пользователя
+        if(!App::$user)$this->error('403 Forbidden');
+        if(!isset($_GET['lastupdate']))$this->error('500 Internal Server Error');
+        if(!isset($_GET['curpage']))$cp=0;
+        else $cp=Utils::clearUInt($_GET['curpage']);
+        $lu=Utils::clearStr($_GET['lastupdate']);
+        if(null===($posts=DB::getMessages($lu,$cp,self::PAGE_POSTS_COUNT,App::$user->id)))$this->error('500 Internal Server Error');
+
+        if(count($posts)<1)die('Ok');
+        header('Content-type:application/json');
+        $obj=new \stdClass();
+        $obj->lastupdate=Utils::now();
+        $obj->posts=$posts;
+        die(json_encode($obj));
+    }
+
+    protected function addmsg($args){
+        // Добавить или обновить сообщение, вернуть сообщение/error 500
+        if(!$user=App::$user) $this->error('403 Forbidden');
+        if(!isset($_POST['data']))$this->error();
+        $data=json_decode($_POST['data']);
+
+        //        var_dump($data);
+        //        exit;
+
+        if(null===$post=UserMessage::create($data))$this->error();
+
+        if($err=$post->save()){
+            //            $this->error('500 Internal Server Error');
+            header($_SERVER["SERVER_PROTOCOL"] . " 500 Internal Server Error");
+            die($err);
+        }
+        header('Content-type:application/json');
+        die(json_encode($post->getPost()));
     }
 
     protected function user($args){

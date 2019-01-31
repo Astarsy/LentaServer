@@ -69,6 +69,45 @@ class Api extends Base{
         die(json_encode($author));
     }
 
+    protected function wantfriend($args){
+        // Принять uid, добавить заявку в друзья, вернуть Ок/error 500
+        if(!$user=App::$user)$this->error('403 Forbidden');
+        if(!isset($_POST['uid']))$this->error('500 Internal Server Error');
+        $aid=Utils::clearUInt($_POST['uid']);
+        if($err=DB::friendUserTo($user->id,$aid)){
+            $this->error('500 Internal Server Error');
+
+//            header($_SERVER["SERVER_PROTOCOL"] . " 500 Internal Server Error");
+//            die($err);
+        }
+    }
+
+    protected function yesfriend($args){
+        // Принять uid, подтвердить заявку в друзья, вернуть Ок/error 500
+        if(!$user=App::$user)$this->error('403 Forbidden');
+        if(!isset($_POST['id']))$this->error('500 Internal Server Error');
+        $fid=Utils::clearUInt($_POST['id']);
+        if($err=DB::setUserFriendStatus($user->id,$fid,'active')){
+            $this->error('500 Internal Server Error');
+
+//            header($_SERVER["SERVER_PROTOCOL"] . " 500 Internal Server Error");
+//            die($err);
+        }
+    }
+
+    protected function nofriend($args){
+        // Принять uid, подтвердить заявку в друзья, вернуть Ок/error 500
+        if(!$user=App::$user)$this->error('403 Forbidden');
+        if(!isset($_POST['id']))$this->error('500 Internal Server Error');
+        $fid=Utils::clearUInt($_POST['id']);
+        if($err=DB::setUserFriendStatus($user->id,$fid,'deleted')){
+            $this->error('500 Internal Server Error');
+
+//            header($_SERVER["SERVER_PROTOCOL"] . " 500 Internal Server Error");
+//            die($err);
+        }
+    }
+
     protected function unscribe($args){
         if(!$user=App::$user)$this->error('403 Forbidden');
         if(!isset($_POST['id']))$this->error('500 Internal Server Error');

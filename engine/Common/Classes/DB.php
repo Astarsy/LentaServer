@@ -322,7 +322,7 @@ LIMIT $from,$op
 SELECT p.*,u.name as user_name,u.avatar as user_avatar FROM friends f
   LEFT JOIN posts p ON p.user_id=f.friend_id
   LEFT JOIN users u ON u.id=f.friend_id
-WHERE f.user_id=$uid AND ISNULL(p.deleted_at) AND (p.updated_at>=:lu OR p.created_at>=:lu)
+WHERE f.user_id=$uid AND f.status='active' AND ISNULL(p.deleted_at) AND (p.updated_at>=:lu OR p.created_at>=:lu)
 ORDER BY p.updated_at DESC
 LIMIT $from,$op
 ";
@@ -492,6 +492,37 @@ WHERE u.id=$author_id";
         }
     }
 
+    public static function friendUserTo($uid,$fid){
+        // Добавить нового не активного друга (заявку), вернуть Ошибку/null
+        $pdo=self::getPDO();
+        try{
+            $sql="INSERT INTO friends(user_id, friend_id, created_at, status) VALUES(:uid,:fid,NOW(),'new')";
+            $stmt=$pdo->prepare($sql);
+            $stmt->bindValue(':uid',$fid,\PDO::PARAM_INT);
+            $stmt->bindValue(':fid',$uid,\PDO::PARAM_INT);
+            $stmt->execute();
+            return null;
+        }catch(\PDOException $e){
+            return $e->getMessage();
+        }
+    }
+
+    public static function setUserFriendStatus($uid,$fid,$st){
+        // Сохранить статус друга, вернуть Ошибку/null
+        $pdo=self::getPDO();
+        try{
+            $sql="UPDATE friends SET status=:st WHERE user_id=:ui AND friend_id=:fi";
+            $stmt=$pdo->prepare($sql);
+            $stmt->bindValue(':st',$st,\PDO::PARAM_STR);
+            $stmt->bindValue(':ui',$uid,\PDO::PARAM_INT);
+            $stmt->bindValue(':fi',$fid,\PDO::PARAM_INT);
+            $stmt->execute();
+            return null;
+        }catch(\PDOException $e){
+            return $e->getMessage();
+        }
+    }
+
     public static function getUserSubscribeUsers($lu,$cp,$op,$uid){
         // Принять время предыдущего обновления, текущую страницу, кол-во на странице
         // вернуть массив всех или новых друзей/null
@@ -516,7 +547,7 @@ ORDER BY s.created_at
         }
     }
 
-    public static function getUserFriendUsers($lu,$cp,$op,$uid){
+    public static function getUserFriendUsers($lu,$cp,$op,$uid,$st){
         // вернуть массив друзей/null
 
         $pdo=self::getPDO();
@@ -526,7 +557,7 @@ SELECT u.id,u.name,u.avatar
   ,(SELECT COUNT(p.id)FROM posts p WHERE p.user_id=f.friend_id)as post_count
     FROM friends f
   LEFT JOIN users u ON u.id=f.friend_id
-WHERE f.user_id=$uid
+WHERE f.user_id=$uid AND f.status='$st'
 ORDER BY f.created_at
 ";
             $stmt=$pdo->prepare($sql);
@@ -556,7 +587,7 @@ ORDER BY f.created_at
         // Удалить из друзей, вернуть ошибку/null
         $pdo=self::getPDO();
         try{
-            $sql="DELETE FROM friends WHERE user_id=$uid AND friend_id=$suid";
+            $sql="UPDATE friends SET status='deleted' WHERE user_id=$uid AND friend_id=$suid";
             $stmt=$pdo->prepare($sql);
             $stmt->execute();
         }catch(\PDOException $e){

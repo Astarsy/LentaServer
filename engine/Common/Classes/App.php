@@ -104,9 +104,11 @@ class App{
             $user_str='';
             $subscribes='';
             $friends='';
+            $askfriends='';
         }else{
             $subscribes='subscribes:'.json_encode(DB::getUserSubscribeUsers(0,0,0,$user->id)).',';
-            $friends='friends:'.json_encode(DB::getUserFriendUsers(0,0,0,$user->id)).',';
+            $friends='friends:'.json_encode(DB::getUserFriendUsers(0,0,0,$user->id,'active')).',';
+            $askfriends='askfriends:'.json_encode(DB::getUserFriendUsers(0,0,0,$user->id,'new')).',';
             $my_tab="
     {
         name: 'Моя',
@@ -165,6 +167,7 @@ class App{
 document.mag_start_data={
     $subscribes
     $friends
+    $askfriends
     $tabs
     $user_str
     $timeout

@@ -37,7 +37,7 @@ class Html extends Base{
         $this->title='Lenta';
 
         echo'<pre>Ok';
-
+var_dump($_SERVER);
         exit;
     }
 

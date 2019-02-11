@@ -338,10 +338,10 @@ LIMIT $from,$op
         }
     }
 
-    public static function getMessages($lu,$cp,$op,$uid){
+    public static function getMessages($pc,$cp,$op,$uid){
         // вернуть массив личные сообщения текущего пользователя/null
         // формат должен соответствовать формату Tab, т.е как посты
-        $from=0;
+        $from=$pc;
         $op=$op*($cp+1);
         $pdo=self::getPDO();
         try{
@@ -349,17 +349,16 @@ LIMIT $from,$op
 SELECT p.*,u.name as user_name,u.avatar as user_avatar,tu.name as to_user_name,tu.avatar as to_user_avatar FROM messages p
   LEFT JOIN users u ON u.id=p.user_id
   LEFT JOIN users tu ON tu.id=p.to_user_id
-WHERE p.to_user_id=$uid AND ISNULL(p.deleted_at) AND (p.updated_at>=:lu OR p.created_at>=:lu)
+WHERE p.to_user_id=$uid AND ISNULL(p.deleted_at)
 UNION 
 SELECT p.*,u.name as user_name,u.avatar as user_avatar,tu.name as to_user_name,tu.avatar as to_user_avatar FROM messages p
   LEFT JOIN users u ON u.id=p.user_id
   LEFT JOIN users tu ON tu.id=p.to_user_id
-WHERE p.user_id=$uid AND ISNULL(p.deleted_at) AND (p.updated_at>=:lu OR p.created_at>=:lu)
+WHERE p.user_id=$uid AND ISNULL(p.deleted_at)
 ORDER BY updated_at DESC
 LIMIT $from,$op
 ";
             $stmt=$pdo->prepare($sql);
-            $stmt->bindValue(':lu',$lu,\PDO::PARAM_STR);
             $stmt->execute();
             $posts=$stmt->fetchAll(\PDO::FETCH_ASSOC);
             $posts=self::addItemsToMessage($pdo,$posts);

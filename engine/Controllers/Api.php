@@ -245,11 +245,11 @@ class Api extends Base{
     protected function messages($args){
         // Отдать личные сообщения текущего пользователя
         if(!App::$user)$this->error('403 Forbidden');
-        if(!isset($_GET['lastupdate']))$this->error('500 Internal Server Error');
+        if(!isset($_GET['postcount']))$this->error('500 Internal Server Error');
         if(!isset($_GET['curpage']))$cp=0;
         else $cp=Utils::clearUInt($_GET['curpage']);
-        $lu=Utils::clearStr($_GET['lastupdate']);
-        if(null===($posts=DB::getMessages($lu,$cp,self::PAGE_POSTS_COUNT,App::$user->id)))$this->error('500 Internal Server Error');
+        $pc=Utils::clearUInt($_GET['postcount']);
+        if(null===($posts=DB::getMessages($pc,$cp,self::PAGE_POSTS_COUNT,App::$user->id)))$this->error('500 Internal Server Error');
 
         if(count($posts)<1)die('Ok');
         header('Content-type:application/json');

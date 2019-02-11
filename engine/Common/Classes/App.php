@@ -209,9 +209,10 @@ document.mag_start_data={
         $args=array_slice($pieces,2);
 
         $cn="\\Controllers\\$cn";
-        if(!class_exists($cn) || !is_subclass_of($cn,'\\Controllers\\iController'))$this->error();
+        if(!class_exists($cn))$this->error();
 
-        new $cn($args);
+        $ci=new $cn($args);
+        echo $ci->render();
     }
 
     public function error(){

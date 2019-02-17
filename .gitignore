@@ -1,4 +1,6 @@
 .idea
 dump*
 www/img/fotos
+www/img/msgfotos
 www/webstat
+engine/Common/config_loc.php

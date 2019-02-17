@@ -24,22 +24,10 @@ class Html extends Base{
 //    protected function test($args){
 //        $this->title='Lenta';
 //
-////        foreach(App::$params['foto']['types'] as $k=>$v);
-//        $v=end(App::$params['foto']['types']);
-//
-//
-//        echo'<pre>';
-//        var_dump($v);
+//        echo'<pre>Ok';
+//var_dump($_SERVER);
 //        exit;
 //    }
-
-    protected function test($args){
-        $this->title='Lenta';
-
-        echo'<pre>Ok';
-var_dump($_SERVER);
-        exit;
-    }
 
     protected function profile(){
         if(!$this->user=App::$user)$this->error('403 Forbidden');

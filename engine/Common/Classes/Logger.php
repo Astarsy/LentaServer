@@ -16,13 +16,13 @@ class Logger{
     protected static function loginByCoockie(){
         // Если уже залогинен куками - загрузить п-ля
         $data=self::getData();
-        if(!empty($data['token'])){
+        if(empty($data['token']))return null;
+        else{
             $token=Utils::clearStr($data['token']);
             $user=new User();
-            if($err=$user->loadBy('enter_token',$token))throw new \Exception('пользователь не найден');
+            if(($err=$user->loadBy('enter_token',$token))|| empty($user->id))return null;
             return $user;
         }
-        return null;
     }
 
     public static function loginByRemote($args){

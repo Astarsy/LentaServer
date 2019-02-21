@@ -19,6 +19,7 @@ class Model{
 
     protected function fillFields($arr){
         // ожидается массив полей
+        if(!is_array($arr))return;
         foreach($arr as $k=>$v){
             $this->{$k}=$v;
         }
